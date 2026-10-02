@@ -31,7 +31,8 @@ export async function POST(req) {
 
   // Fallback to FastAPI server
   try {
-    const res = await fetch(`http://localhost:8000/potholes/${id}`, {
+    const apiBase = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    const res = await fetch(`${apiBase}/potholes/${id}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',

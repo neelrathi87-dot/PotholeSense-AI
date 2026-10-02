@@ -23,7 +23,7 @@ COPY templates/ ./templates/
 # Create directory for local uploads and set permissive permissions for container hosts
 RUN mkdir -p static/uploads && chmod -R 777 /app
 
-ENV PORT=8000
-EXPOSE 8000
+ENV PORT=7860
+EXPOSE 7860
 
-CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT} --workers 1"]
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-7860} --workers 1"]

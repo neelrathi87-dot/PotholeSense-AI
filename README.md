@@ -1,3 +1,13 @@
+---
+title: PotholeSense AI
+emoji: 🛣️
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # 🛣️ PotholeSense AI — Edge-to-Cloud Road Quality & Pothole Monitoring System
 
 An end-to-end intelligent IoT & Computer Vision platform designed for public transit fleets and municipal patrol vehicles. The system captures road video frames on edge devices (such as Raspberry Pi), extracts real-time GPS coordinates, runs deep learning YOLOv8 pothole detection, classifies road hazard severity, performs geospatial deduplication, and streams detections to an interactive GIS dashboard with full CRUD and GeoJSON/CSV export capabilities.

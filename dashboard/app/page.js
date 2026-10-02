@@ -29,21 +29,22 @@ export default function Home() {
         if (error) setError(error.message);
         else setPotholes(data || []);
       } else {
-        // Fallback to local FastAPI server
+        // Fallback to FastAPI server
         try {
-          const res = await fetch('http://localhost:8000/potholes?limit=2000');
+          const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+          const res = await fetch(`${apiBase}/potholes?limit=2000`);
           if (res.ok) {
             const data = await res.json();
             const formatted = data.map((p) => ({
               ...p,
               image_url: p.image_url?.startsWith('/static')
-                ? `http://localhost:8000${p.image_url}`
+                ? `${apiBase}${p.image_url}`
                 : p.image_url,
             }));
             if (active) setPotholes(formatted);
           }
         } catch (e) {
-          if (active) setError('Could not reach backend at http://localhost:8000');
+          if (active) setError('Could not reach backend at ' + (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'));
         }
       }
     }
