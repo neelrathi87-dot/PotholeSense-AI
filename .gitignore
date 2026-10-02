@@ -35,6 +35,7 @@ potholes.db
 servers.log
 server.pid
 active_tunnel_url.txt
+offline_buffer/
 
 # OS Files
 Thumbs.db
