@@ -16,8 +16,11 @@ RUN pip install --no-cache-dir torch torchvision --index-url https://download.py
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Pre-cache YOLOv8n model weights for Privacy Blur
+RUN python -c "from ultralytics import YOLO; YOLO('yolov8n.pt')"
+
 # Copy application code, database manager, templates, and model weights
-COPY main.py database.py best.pt test.jpg ./
+COPY main.py database.py privacy.py best.pt test.jpg ./
 COPY templates/ ./templates/
 
 # Create directory for local uploads and set permissive permissions for container hosts

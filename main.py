@@ -20,6 +20,7 @@ from pydantic import BaseModel, Field
 from ultralytics import YOLO
 
 from database import StorageAndDatabaseManager
+from privacy import PrivacyBlur
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
@@ -58,6 +59,9 @@ logger.info(f"YOLO model loaded. Detected classes: {model.names}")
 
 # Initialize Storage & Database Manager (Supabase or Local SQLite)
 db = StorageAndDatabaseManager()
+
+# Initialize Privacy Blur (faces and license plates)
+privacy = PrivacyBlur()
 
 # Thread-safe in-memory deduplication cache
 recent = []
@@ -134,6 +138,10 @@ def health():
         "storage_and_db": {
             "mode": "supabase" if db.use_supabase else "local_sqlite",
             "bucket": db.bucket_name if db.use_supabase else "local_filesystem"
+        },
+        "privacy": {
+            "enabled": privacy.enabled,
+            "mode": privacy.mode
         }
     }
 
@@ -175,7 +183,8 @@ def detect(
     confidence = float(confs.max())
     severity = severity_from_ratio(ratio)
 
-    annotated = result.plot()
+    safe_img, blurred = privacy.apply(img)
+    annotated = result.plot(img=safe_img)
     ok, buf = cv2.imencode(".jpg", annotated, [cv2.IMWRITE_JPEG_QUALITY, 85])
     if not ok:
         raise HTTPException(status_code=500, detail="Frame encoding failed")
@@ -203,6 +212,7 @@ def detect(
         "severity": severity,
         "confidence": round(confidence, 3),
         "pothole_count": int(len(result.boxes)),
+        "blurred_regions": blurred,
         "record": saved_record
     }
 

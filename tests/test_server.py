@@ -12,6 +12,8 @@ def test_health():
     assert data["status"] == "ok"
     assert "model" in data
     assert "storage_and_db" in data
+    assert "privacy" in data
+    assert data["privacy"]["enabled"] is True
 
 def test_dashboard():
     response = client.get("/")
@@ -41,6 +43,7 @@ def test_detect_success_and_deduplication():
     assert data["detected"] is True
     assert data["logged"] is True
     assert data["severity"] in ["low", "medium", "high"]
+    assert "blurred_regions" in data
     assert "record" in data
     pothole_id = data["record"]["id"]
 
@@ -93,3 +96,23 @@ def test_detect_success_and_deduplication():
     del_res = client.delete(f"/potholes/{pothole_id}", headers={"x-api-key": API_KEY})
     assert del_res.status_code == 200
     assert del_res.json()["deleted"] is True
+
+
+def test_privacy_blur_unit():
+    import numpy as np
+    from privacy import PrivacyBlur, pixelate
+    pb = PrivacyBlur()
+    assert pb.enabled is True
+    
+    # Create synthetic test image
+    dummy_img = np.zeros((400, 400, 3), dtype=np.uint8)
+    # Test pixelate utility
+    box = (50, 50, 150, 150)
+    ok = pixelate(dummy_img, box)
+    assert ok is True
+
+    # Test apply method
+    processed, count = pb.apply(dummy_img)
+    assert processed.shape == dummy_img.shape
+    assert isinstance(count, int)
+

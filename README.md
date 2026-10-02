@@ -205,3 +205,29 @@ curl -X POST http://localhost:8000/detect \
   - `low`: Normalized bounding box area $< 1\%$ of frame
   - `medium`: Area between $1\%$ and $3\%$
   - `high`: Area $\ge 3\%$ of frame (triggers highlighted visual alert on GIS dashboard)
+
+---
+
+## 🔒 Privacy Blur Module (Faces & License Plates)
+
+To ensure strict compliance with municipal privacy mandates and GDPR/data protection norms, detected evidence frames are automatically pixelated over faces and vehicle license plates before storage and display.
+
+### Pipeline Highlights
+- **Zero Accuracy Impact**: Pothole inference runs on the pristine raw frame first, ensuring ML detection accuracy is 100% preserved.
+- **Selective Compute**: Privacy blurring only executes on confirmed, non-duplicate hazard frames about to be committed to storage.
+- **Pre-Upload Pixelation**: Raw images never reach cloud or persistent storage; bounding boxes are rendered directly on top of the pixelated frame.
+- **API Visibility**: `/detect` responses report `"blurred_regions": int` indicating the number of obscured areas.
+
+### Privacy Modes & Configuration
+| Variable | Default | Description |
+|---|---|---|
+| `PRIVACY_BLUR` | `1` | Enable (`1`) or disable (`0`) automatic privacy redaction. |
+| `PRIVACY_MODE` | `standard` | `standard` (Haar cascades) or `aggressive` (COCO person/vehicle redaction). |
+| `PLATE_MODEL_PATH` | *(empty)* | Optional custom YOLO license plate model weights path. |
+| `COCO_MODEL_PATH` | `yolov8n.pt` | Pre-trained COCO model path used for aggressive privacy coverage. |
+
+### CLI Test Script
+Test privacy redaction on any road footage:
+```bash
+python test_privacy.py road_scene.jpg blurred_output.jpg
+```
