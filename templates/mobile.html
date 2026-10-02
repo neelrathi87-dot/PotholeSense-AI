@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>PotholeSense Edge Patrol Client</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background-color: #090d16; color: #f1f5f9; min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; padding-bottom: 24px; }
+    
+    /* Top Bar */
+    .top-bar { background: #0f172a; border-bottom: 1px solid #1e293b; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-icon { width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(135deg, #f59e0b, #ef4444); display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3); }
+    .brand-text h1 { font-size: 15px; font-weight: 700; color: #fff; letter-spacing: -0.3px; }
+    .brand-text p { font-size: 10px; color: #f59e0b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* GPS Badge */
+    .badge { font-size: 11px; padding: 5px 12px; border-radius: 20px; font-weight: 600; display: flex; align-items: center; gap: 6px; border: 1px solid transparent; }
+    .badge-gps-active { background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.3); }
+    .badge-gps-waiting { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border-color: rgba(245, 158, 11, 0.3); }
+    .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+    .dot-green { background: #10b981; box-shadow: 0 0 8px #10b981; }
+    .dot-amber { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
+
+    /* Main Container */
+    .container { flex: 1; padding: 14px; max-width: 440px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 14px; }
+
+    /* Viewfinder */
+    .viewfinder { position: relative; width: 100%; aspect-ratio: 4/3; background: #000; border-radius: 16px; overflow: hidden; border: 2px solid #1e293b; box-shadow: 0 10px 25px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; }
+    #videoPreview { width: 100%; height: 100%; object-fit: cover; }
+    #captureCanvas { display: none; }
+
+    /* HUD */
+    .hud-overlay { position: absolute; inset: 0; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding: 10px; }
+    .hud-top { display: flex; justify-content: space-between; }
+    .hud-pill { background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px); padding: 4px 10px; border-radius: 8px; font-size: 11px; font-family: monospace; border: 1px solid rgba(255, 255, 255, 0.15); color: #e2e8f0; }
+    .hud-device { color: #38bdf8; font-weight: 600; }
+    
+    .crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 44px; height: 44px; border: 1.5px dashed rgba(255,255,255,0.3); border-radius: 8px; pointer-events: none; }
+
+    /* Detection Alert */
+    .detection-alert { position: absolute; bottom: 10px; left: 10px; right: 10px; background: rgba(220, 38, 38, 0.95); backdrop-filter: blur(6px); border-radius: 12px; padding: 10px 14px; display: none; justify-content: space-between; align-items: center; box-shadow: 0 6px 20px rgba(220, 38, 38, 0.5); animation: pulse 0.8s infinite; }
+    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
+    .alert-title { font-size: 13px; font-weight: 800; color: #fff; text-transform: uppercase; }
+    .alert-sub { font-size: 11px; color: #fecaca; }
+    .alert-badge { background: #000; color: #fff; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; }
+
+    /* Camera Fallback Screen */
+    .cam-fallback { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 20px; text-align: center; }
+    .cam-fallback-icon { font-size: 32px; margin-bottom: 2px; }
+    .cam-fallback h3 { font-size: 14px; font-weight: 600; color: #cbd5e1; }
+    .cam-fallback p { font-size: 11px; color: #64748b; max-width: 280px; }
+
+    /* Metric Grid (Clean 2-card layout) */
+    .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .metric-card { background: #0f172a; border: 1px solid #1e293b; border-radius: 14px; padding: 12px 14px; text-align: center; }
+    .metric-label { font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 4px; }
+    .metric-value { font-size: 24px; font-weight: 800; font-family: monospace; color: #f8fafc; }
+    .metric-sub { font-size: 10px; color: #475569; margin-top: 2px; }
+
+    /* Action Buttons */
+    .action-group { display: flex; flex-direction: column; gap: 10px; }
+    .btn { width: 100%; padding: 14px 18px; border-radius: 12px; font-size: 14px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; letter-spacing: 0.3px; }
+    .btn:active { transform: scale(0.98); }
+    
+    .btn-patrol { background: linear-gradient(135deg, #f59e0b, #d97706); color: #0f172a; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3); }
+    .btn-patrol.recording { background: linear-gradient(135deg, #ef4444, #b91c1c); color: #fff; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); }
+    
+    .btn-snap { background: #1e293b; border: 1px solid #334155; color: #f1f5f9; font-size: 13px; }
+
+    /* Feed Log */
+    .log-box { background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; }
+    .log-header { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #64748b; font-weight: 600; border-bottom: 1px solid #1e293b; padding-bottom: 4px; }
+    .log-entries { max-height: 90px; overflow-y: auto; display: flex; flex-direction: column; gap: 3px; font-family: monospace; font-size: 10.5px; }
+    .log-entry { color: #94a3b8; }
+    .log-pothole { color: #f87171; font-weight: bold; }
+    .log-success { color: #34d399; }
+    
+    .footer-links { text-align: center; margin-top: 4px; }
+    .footer-links a { color: #f59e0b; font-size: 12px; font-weight: 600; text-decoration: none; }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation -->
+  <header class="top-bar">
+    <div class="brand">
+      <div class="brand-icon">🚗</div>
+      <div class="brand-text">
+        <h1>PotholeSense</h1>
+        <p>Edge Patrol Unit</p>
+      </div>
+    </div>
+    <div id="gpsPill" class="badge badge-gps-waiting">
+      <span id="gpsDot" class="dot dot-amber"></span>
+      <span id="gpsText">Acquiring GPS...</span>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <!-- Viewfinder -->
+    <div class="viewfinder" id="viewfinder">
+      <video id="videoPreview" autoplay playsinline muted></video>
+      <canvas id="captureCanvas"></canvas>
+      <div class="crosshair"></div>
+
+      <!-- HUD Telemetry -->
+      <div class="hud-overlay">
+        <div class="hud-top">
+          <div class="hud-pill" id="hudCoords">Lat: --.----, Lon: --.----</div>
+          <div class="hud-pill hud-device">Device: bus-01</div>
+        </div>
+      </div>
+
+      <!-- Detection Alert Banner -->
+      <div class="detection-alert" id="detectionAlert">
+        <div>
+          <div class="alert-title">🚨 Pothole Detected!</div>
+          <div class="alert-sub" id="alertSeverityText">High Severity Hazard</div>
+        </div>
+        <div class="alert-badge" id="alertConfText">87%</div>
+      </div>
+
+      <!-- Fallback Prompt -->
+      <div class="cam-fallback" id="camFallback">
+        <div class="cam-fallback-icon">📷</div>
+        <h3>Patrol Camera Ready</h3>
+        <p>Tap "Enable Camera" or "Start Patrol Stream" to begin monitoring.</p>
+        <button onclick="requestCameraAccess()" class="btn btn-snap" style="margin-top: 8px; width: auto; padding: 8px 16px; font-size: 12px;">
+          Enable Live Camera
+        </button>
+      </div>
+    </div>
+
+    <!-- Clean 2-Metric Grid (Frames & Hazards Only) -->
+    <div class="metrics">
+      <div class="metric-card">
+        <div class="metric-label">Frames Transmitted</div>
+        <div class="metric-value" id="valFrames" style="color: #f59e0b;">0</div>
+        <div class="metric-sub">uploads</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Potholes Detected</div>
+        <div class="metric-value" id="valDetections" style="color: #ef4444;">0</div>
+        <div class="metric-sub">hazards mapped</div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="action-group">
+      <!-- Live Patrol Stream -->
+      <button id="btnPatrol" onclick="togglePatrol()" class="btn btn-patrol">
+        <span id="patrolIcon">▶</span>
+        <span id="patrolText">START PATROL STREAM</span>
+      </button>
+
+      <!-- Native Camera File Capture -->
+      <label class="btn btn-snap">
+        <span>📸 Manual Snap & Upload Photo</span>
+        <input type="file" id="nativeCamInput" accept="image/*" capture="environment" style="display: none;" onchange="handleNativeCapture(event)">
+      </label>
+    </div>
+
+    <!-- Live Event Log -->
+    <div class="log-box">
+      <div class="log-header">
+        <span>Patrol Unit Activity Feed</span>
+        <span id="pingStatus">Server Connected</span>
+      </div>
+      <div class="log-entries" id="logEntries">
+        <div class="log-entry">• Edge client ready. Mount device and tap Start Patrol.</div>
+      </div>
+    </div>
+
+    <div class="footer-links">
+      <a href="/" target="_blank">View Map Dashboard on Laptop ↗</a>
+    </div>
+
+  </div>
+
+  <script>
+    // State
+    let isPatrolling = false;
+    let patrolInterval = null;
+    let mediaStream = null;
+    let framesSent = 0;
+    let detectionsFound = 0;
+    let wakeLock = null;
+
+    // Current Coordinates
+    let currentCoords = {
+      lat: 19.9975,
+      lon: 73.7898,
+      accuracy: 999,
+      isReal: false
+    };
+
+    const video = document.getElementById('videoPreview');
+    const canvas = document.getElementById('captureCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Keep screen awake while vehicle is running
+    async function acquireWakeLock() {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLock = await navigator.wakeLock.request('screen');
+        }
+      } catch (err) {}
+    }
+
+    // Logging helper
+    function addLog(msg, type = "normal") {
+      const el = document.getElementById('logEntries');
+      const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const row = document.createElement('div');
+      row.className = type === "pothole" ? "log-entry log-pothole" : type === "success" ? "log-entry log-success" : "log-entry";
+      row.innerText = `[${time}] ${msg}`;
+      el.prepend(row);
+    }
+
+    // Geolocation handler
+    function processGpsPosition(pos) {
+      currentCoords.lat = pos.coords.latitude;
+      currentCoords.lon = pos.coords.longitude;
+      currentCoords.accuracy = pos.coords.accuracy || 5;
+      currentCoords.isReal = true;
+
+      document.getElementById('hudCoords').innerText = `${currentCoords.lat.toFixed(4)}, ${currentCoords.lon.toFixed(4)}`;
+      document.getElementById('gpsPill').className = "badge badge-gps-active";
+      document.getElementById('gpsDot').className = "dot dot-green";
+      document.getElementById('gpsText').innerText = `GPS Fix (±${Math.round(currentCoords.accuracy)}m)`;
+    }
+
+    function initGPS() {
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => processGpsPosition(pos),
+          (err) => console.warn("GPS init:", err),
+          { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+        );
+
+        navigator.geolocation.watchPosition(
+          (pos) => processGpsPosition(pos),
+          (err) => {
+            document.getElementById('gpsPill').className = "badge badge-gps-waiting";
+            document.getElementById('gpsDot').className = "dot dot-amber";
+            document.getElementById('gpsText').innerText = "Waiting for GPS Fix...";
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 1000 }
+        );
+      }
+    }
+
+    // Camera Access
+    async function requestCameraAccess() {
+      try {
+        if (mediaStream) {
+          mediaStream.getTracks().forEach(t => t.stop());
+        }
+
+        const constraints = {
+          video: {
+            facingMode: { ideal: "environment" },
+            width: { ideal: 640 },
+            height: { ideal: 480 }
+          },
+          audio: false
+        };
+
+        mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+        video.srcObject = mediaStream;
+        document.getElementById('camFallback').style.display = 'none';
+        addLog("Patrol camera connected.", "success");
+        await acquireWakeLock();
+      } catch (err) {
+        console.warn("Camera stream error:", err);
+      }
+    }
+
+    // Toggle Patrol Continuous Recording
+    async function togglePatrol() {
+      const btn = document.getElementById('btnPatrol');
+      const text = document.getElementById('patrolText');
+      const icon = document.getElementById('patrolIcon');
+
+      if (!isPatrolling) {
+        if (!mediaStream) {
+          await requestCameraAccess();
+        }
+
+        if (!mediaStream) {
+          alert("Camera stream starting or requires permission. Tap 'Manual Snap' if needed.");
+          return;
+        }
+
+        isPatrolling = true;
+        btn.className = "btn btn-patrol recording";
+        text.innerText = "STOP PATROL STREAM";
+        icon.innerText = "⏹";
+        addLog("Continuous patrol active. Streaming frames to AI...", "success");
+        await acquireWakeLock();
+
+        patrolInterval = setInterval(captureAndSendFrame, 2000);
+      } else {
+        isPatrolling = false;
+        clearInterval(patrolInterval);
+        btn.className = "btn btn-patrol";
+        text.innerText = "START PATROL STREAM";
+        icon.innerText = "▶";
+        addLog("Patrol stream stopped.", "normal");
+      }
+    }
+
+    // Capture Frame from Video
+    async function captureAndSendFrame() {
+      if (!video.videoWidth || !video.videoHeight) return;
+
+      canvas.width = 640;
+      canvas.height = (video.videoHeight * 640) / video.videoWidth;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      canvas.toBlob(async (blob) => {
+        if (blob) {
+          await uploadFrame(blob);
+        }
+      }, "image/jpeg", 0.70);
+    }
+
+    // Handle Native Photo Input
+    async function handleNativeCapture(event) {
+      const files = event.target.files;
+      if (!files || !files.length) return;
+      await uploadFrame(files[0]);
+    }
+
+    // Upload Frame to Server
+    async function uploadFrame(imageBlob) {
+      const formData = new FormData();
+      formData.append("frame", imageBlob, "frame.jpg");
+      formData.append("lat", currentCoords.lat.toFixed(6));
+      formData.append("lon", currentCoords.lon.toFixed(6));
+      formData.append("device_id", "bus-01");
+
+      try {
+        framesSent++;
+        document.getElementById('valFrames').innerText = framesSent;
+
+        const res = await fetch("/detect", {
+          method: "POST",
+          headers: { "x-api-key": "test-api-key-12345" },
+          body: formData
+        });
+
+        const data = await res.json();
+        document.getElementById('pingStatus').innerText = "Server Connected";
+
+        if (res.ok && data.detected) {
+          detectionsFound++;
+          document.getElementById('valDetections').innerText = detectionsFound;
+
+          showAlert(data.severity, data.confidence);
+          addLog(`🚨 POTHOLE! ${data.severity.toUpperCase()} (${(data.confidence * 100).toFixed(0)}%) logged to map!`, "pothole");
+
+          if ("vibrate" in navigator) {
+            navigator.vibrate([300, 150, 300]);
+          }
+        } else if (res.ok) {
+          addLog(`Road surface analyzed. Clear.`, "normal");
+        }
+      } catch (err) {
+        document.getElementById('pingStatus').innerText = "Buffering";
+        addLog(`Network notice: ${err.message}`, "normal");
+      }
+    }
+
+    function showAlert(severity, confidence) {
+      const alert = document.getElementById('detectionAlert');
+      document.getElementById('alertSeverityText').innerText = `${severity.toUpperCase()} Hazard`;
+      document.getElementById('alertConfText').innerText = `${(confidence * 100).toFixed(0)}%`;
+      alert.style.display = 'flex';
+
+      setTimeout(() => {
+        alert.style.display = 'none';
+      }, 3500);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initGPS();
+      requestCameraAccess();
+    });
+  </script>
+</body>
+</html>

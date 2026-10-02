@@ -1,0 +1,46 @@
+# Environment & Secrets
+.env
+.env*.local
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.pytest_cache/
+
+# Node & Next.js
+node_modules/
+.next/
+out/
+build/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Binaries & Large Executables
+cloudflared.exe
+*.exe
+
+# Local Databases & Runtime State
+*.db
+*.db-journal
+potholes.db
+servers.log
+server.pid
+active_tunnel_url.txt
+
+# OS Files
+Thumbs.db
+[Dd]esktop.ini
+.DS_Store
+
+# Uploaded images
+static/uploads/*
+!static/uploads/.gitkeep

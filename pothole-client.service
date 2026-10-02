@@ -1,0 +1,17 @@
+[Unit]
+Description=Pothole detection Pi client
+After=network-online.target gpsd.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/pothole
+EnvironmentFile=-/home/pi/pothole/pi.env
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/usr/bin/python3 /home/pi/pothole/client.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,11 @@
+.env
+__pycache__
+*.pyc
+venv
+.git
+.pytest_cache
+dashboard
+exports
+deploy_temp
+pi
+pi_deploy.zip

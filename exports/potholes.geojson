@@ -1,0 +1,125 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.8012,
+          20.0045
+        ]
+      },
+      "properties": {
+        "id": "bc58d57f-3671-4d76-9a42-09333c1a2cbe",
+        "device_id": "bus-01",
+        "severity": "high",
+        "confidence": 0.869,
+        "pothole_count": 1,
+        "status": "open",
+        "image_url": "/static/uploads/bus-01/2026/10/01/45bf19ae39fe4c748593038d34bbac16.jpg",
+        "detected_at": "2026-10-01T20:05:30.784177+00:00"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.7984,
+          20.0028
+        ]
+      },
+      "properties": {
+        "id": "b8814054-7f1d-4277-b0e1-2f7abf82ae50",
+        "device_id": "bus-03",
+        "severity": "high",
+        "confidence": 0.869,
+        "pothole_count": 1,
+        "status": "open",
+        "image_url": "/static/uploads/bus-03/2026/10/01/ee5f0cb65d2841d48276baed6d6028ca.jpg",
+        "detected_at": "2026-10-01T20:05:27.577729+00:00"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.7958,
+          20.0011
+        ]
+      },
+      "properties": {
+        "id": "e9f8c45e-24df-4713-ba4c-0f054943847f",
+        "device_id": "bus-02",
+        "severity": "high",
+        "confidence": 0.869,
+        "pothole_count": 1,
+        "status": "open",
+        "image_url": "/static/uploads/bus-02/2026/10/01/51cd703f4f6b46b1968053598c3943d4.jpg",
+        "detected_at": "2026-10-01T20:05:24.350617+00:00"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.7932,
+          19.9995
+        ]
+      },
+      "properties": {
+        "id": "ea68413b-fe5d-40f4-8108-a39be070476a",
+        "device_id": "bus-01",
+        "severity": "high",
+        "confidence": 0.869,
+        "pothole_count": 1,
+        "status": "open",
+        "image_url": "/static/uploads/bus-01/2026/10/01/09d84f2eeda644a89884ed64b464956b.jpg",
+        "detected_at": "2026-10-01T20:05:21.046913+00:00"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.7911,
+          19.9982
+        ]
+      },
+      "properties": {
+        "id": "ab5ea664-c76b-4509-9d4b-5a412cbef5c4",
+        "device_id": "bus-03",
+        "severity": "high",
+        "confidence": 0.869,
+        "pothole_count": 1,
+        "status": "open",
+        "image_url": "/static/uploads/bus-03/2026/10/01/99f9e8e393cd48eea66383c4ba53aeac.jpg",
+        "detected_at": "2026-10-01T20:05:10.409581+00:00"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.7898,
+          19.99745
+        ]
+      },
+      "properties": {
+        "id": "cbd08ea8-c176-4002-9bd4-1c9dc61de598",
+        "device_id": "bus-02",
+        "severity": "high",
+        "confidence": 0.869,
+        "pothole_count": 1,
+        "status": "open",
+        "image_url": "/static/uploads/bus-02/2026/10/01/780b1d05bf02430f889a21e6267e76a7.jpg",
+        "detected_at": "2026-10-01T20:04:59.712257+00:00"
+      }
+    }
+  ]
+}

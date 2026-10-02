@@ -1,0 +1,3 @@
+opencv-python-headless
+requests
+gpsd-py3
