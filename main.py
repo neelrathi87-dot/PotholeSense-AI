@@ -68,6 +68,27 @@ recent = []
 lock = threading.Lock()
 
 
+def keep_alive_worker():
+    """Periodically pings the public Render URL to prevent idle spin-down."""
+    render_url = os.getenv("RENDER_EXTERNAL_URL")
+    if not render_url:
+        return
+    import urllib.request
+    logger.info(f"Keep-alive worker activated for public host: {render_url}")
+    while True:
+        time.sleep(540)  # Every 9 minutes (well before the 15-minute sleep threshold)
+        try:
+            ping_url = f"{render_url.rstrip('/')}/health"
+            req = urllib.request.Request(ping_url, headers={"User-Agent": "PotholeSense-KeepAlive/1.0"})
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                logger.info(f"Keep-alive self-ping sent to {ping_url} (HTTP {resp.status})")
+        except Exception as e:
+            logger.warning(f"Keep-alive ping exception: {e}")
+
+
+threading.Thread(target=keep_alive_worker, daemon=True).start()
+
+
 def haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """Calculates great-circle distance between two points in meters."""
     r = 6371000.0
