@@ -10,8 +10,12 @@ from datetime import datetime, timezone
 from typing import Optional
 
 import cv2
+import torch
 import numpy as np
 from dotenv import load_dotenv
+
+# Optimize PyTorch CPU inference on low-core/shared cloud containers
+torch.set_num_threads(1)
 from fastapi import FastAPI, UploadFile, File, Form, Header, HTTPException, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, FileResponse
@@ -190,6 +194,12 @@ def detect(
     img = cv2.imdecode(np.frombuffer(raw, np.uint8), cv2.IMREAD_COLOR)
     if img is None:
         raise HTTPException(status_code=400, detail="Invalid image encoding")
+
+    # Downscale oversized mobile/DSLR frames to max 1280px for high-speed inference
+    h, w = img.shape[:2]
+    if max(h, w) > 1280:
+        scale = 1280.0 / max(h, w)
+        img = cv2.resize(img, (int(w * scale), int(h * scale)), interpolation=cv2.INTER_AREA)
 
     result = model.predict(img, conf=CONF, imgsz=640, verbose=False)[0]
     if len(result.boxes) == 0:

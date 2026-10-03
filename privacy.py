@@ -64,19 +64,37 @@ class PrivacyBlur:
         boxes = []
 
         if self.face is not None and self.profile is not None:
-            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            c_scale = 1.0
+            if max(h, w) > 800:
+                c_scale = 800.0 / max(h, w)
+                c_img = cv2.resize(img, (int(w * c_scale), int(h * c_scale)), interpolation=cv2.INTER_LINEAR)
+            else:
+                c_img = img
+
+            gray = cv2.cvtColor(c_img, cv2.COLOR_BGR2GRAY)
             for cascade in (self.face, self.profile):
-                for x, y, bw, bh in cascade.detectMultiScale(gray, 1.1, 5, minSize=(20, 20)):
-                    boxes.append(pad_box(x, y, x + bw, y + bh, 0.3, w, h))
+                for x, y, bw, bh in cascade.detectMultiScale(gray, 1.2, 4, minSize=(25, 25)):
+                    ox1, oy1 = int(x / c_scale), int(y / c_scale)
+                    ox2, oy2 = int((x + bw) / c_scale), int((y + bh) / c_scale)
+                    boxes.append(pad_box(ox1, oy1, ox2, oy2, 0.3, w, h))
 
         if self.plate_model is not None:
             r = self.plate_model.predict(img, conf=0.25, imgsz=640, verbose=False)[0]
             for x1, y1, x2, y2 in r.boxes.xyxy.cpu().numpy():
                 boxes.append(pad_box(x1, y1, x2, y2, 0.15, w, h))
         elif self.plate is not None:
-            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if 'gray' not in locals() else gray
-            for x, y, bw, bh in self.plate.detectMultiScale(gray, 1.1, 4, minSize=(40, 12)):
-                boxes.append(pad_box(x, y, x + bw, y + bh, 0.15, w, h))
+            if 'gray' not in locals():
+                c_scale = 1.0
+                if max(h, w) > 800:
+                    c_scale = 800.0 / max(h, w)
+                    c_img = cv2.resize(img, (int(w * c_scale), int(h * c_scale)), interpolation=cv2.INTER_LINEAR)
+                else:
+                    c_img = img
+                gray = cv2.cvtColor(c_img, cv2.COLOR_BGR2GRAY)
+            for x, y, bw, bh in self.plate.detectMultiScale(gray, 1.2, 4, minSize=(30, 10)):
+                ox1, oy1 = int(x / c_scale), int(y / c_scale)
+                ox2, oy2 = int((x + bw) / c_scale), int((y + bh) / c_scale)
+                boxes.append(pad_box(ox1, oy1, ox2, oy2, 0.15, w, h))
 
         if self.coco is not None:
             r = self.coco.predict(
